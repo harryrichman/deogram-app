@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deogram Game</title>
+    <style>
+        /* Basic styling for the page */
+        body {
+            font-family: monospace;
+            /* display: flex; */
+            min-height: 100vh;
+            background-color: #f0f0f0;
+            /* margin: 0; */
+        }
+
+        #content {
+            display: flex;
+            flex-direction: column; /* Stack controls on top of the grid */
+            justify-content: center;
+            align-items: center;
+        }
+        
+        /* Styling for the input form container */
+        #controls {
+            margin-bottom: 25px;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        #dimension-form label {
+            margin: 0 5px 0 15px;
+        }
+
+        #dimension-form input[type="number"] {
+            width: 60px;
+            padding: 5px;
+            text-align: center;
+        }
+
+        #dimension-form button {
+            padding: 5px 15px;
+            margin-left: 20px;
+            cursor: pointer;
+        }
+
+        /* The grid container */
+        #grid-container {
+            display: grid;
+            /* Creates 4+2 columns of equal width */
+            /* grid-template-columns: repeat(6, 60px); */
+            /* Creates 3+2 rows of equal height */
+            /* grid-template-rows: repeat(5, 60px); */
+            gap: 15px; /* Space between the squares */
+            padding: 15px;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            /* font styles */
+            font-size: 24pt;
+            font-family: monospace;
+            text-align: center;
+            vertical-align: middle;
+            line-height: 60px;
+        }
+
+        /* Styling for each square in the grid */
+        .grid-wire {
+            width: 60px;
+            height: 60px;
+            /* Set the default background image */
+            background-image: url('wire-elbow.png');
+            background-size: cover; /* Ensures the image covers the square */
+            background-position: center;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: transform 0.2s ease-in-out;
+        }
+        /* Set color of elbow-wires */
+        div[class=grid-wire] {
+            background-color: rgba(144, 144, 255, 0.2);
+        }
+        
+        /* Add a slight zoom effect on hover for better user experience */
+        .grid-wire:hover {
+            transform: scale(1.05);
+        }
+
+        /* This class will be toggled by JavaScript to change the image */
+        .grid-wire.cross {
+            background-image: url('wire-cross.png');
+        }
+    </style>
+</head>
+<body>
+    <h2>Deogram Explorer</h2>
+    
+
+    <div id="content">
+    <div id="controls">
+        <form id="dimension-form">
+            <label for="rows">Rows:</label>
+            <input type="number" id="rows" name="rows" min="1" max="20" value="3" required>
+            
+            <label for="cols">Columns:</label>
+            <input type="number" id="cols" name="cols" min="1" max="20" value="5" required>
+            
+            <button type="submit">Generate Grid</button>
+        </form>
+    </div>
+
+    <div id="grid-container">
+        <!-- <div></div>
+        <div>4</div>
+        <div>5</div>
+        <div>6</div>
+        <div>7</div>
+        <div></div>
+
+        <div>3</div>
+        <div class="grid-wire cross"></div>
+        <div class="grid-wire cross"></div>
+        <div class="grid-wire cross"></div>
+        <div class="grid-wire cross"></div>
+        <div id="out7">7</div>
+
+        <div>2</div>
+        <div class="grid-wire cross"></div>
+        <div class="grid-wire cross"></div>
+        <div class="grid-wire cross"></div>
+        <div class="grid-wire cross"></div>
+        <div id="out6">6</div>
+
+        <div>1</div>
+        <div class="grid-wire cross"></div>
+        <div class="grid-wire cross"></div>
+        <div class="grid-wire cross"></div>
+        <div class="grid-wire cross"></div>
+        <div id="out5">5</div>
+
+        <div></div>
+        <div id="out1">1</div>
+        <div id="out2">2</div>
+        <div id="out3">3</div>
+        <div id="out4">4</div>
+        <div></div> -->
+    </div>
+    </div>
+
+    <script>
+        // This script runs after the HTML content is fully loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            // Get references to all the important elements
+            const form = document.getElementById('dimension-form');
+            const rowsInput = document.getElementById('rows');
+            const colsInput = document.getElementById('cols');
+            const gridContainer = document.getElementById('grid-container');
+            
+            // Listen for the form's 'submit' event
+            form.addEventListener('submit', (event) => {
+                // Prevent the default form action (which is to reload the page)
+                event.preventDefault();
+
+                // Get the integer values from the input fields
+                const rows = parseInt(rowsInput.value, 10);
+                const cols = parseInt(colsInput.value, 10);
+
+                // Create the new grid with the specified dimensions
+                setupGrid(rows, cols);
+            });
+
+            // setupGrid(4, 7);
+            // --- Optional: Create an initial grid when the page first loads ---
+            // This uses the default values (3 and 4) from the input fields.
+            setupGrid(parseInt(rowsInput.value, 10), parseInt(colsInput.value, 10));
+
+        });
+
+        function computePermutation() {
+            // Get the integer values from the input fields
+            const a = parseInt(document.getElementById('rows').value, 10);
+            const b = parseInt(document.getElementById('cols').value, 10);
+
+            let perm = Array(a + b).fill().map((_, i) => i + 1);
+            const idxs = Array(a * b);
+            for (let i = 0; i < a * b; i++) {
+                idxs[i] = (i % b) + a - Math.floor(i / b);
+            }
+            // console.log(idxs);
+
+            const squares = document.querySelectorAll('.grid-wire');
+            squares.entries().forEach(pair => {
+                const [i, square] = pair;
+                const idx = idxs[i];
+                if (square.classList.contains('cross')) {
+                    // apply transposition on elements (idx, idx+1)
+                    const a = perm[idx - 1];
+                    const b = perm[idx];
+                    perm.splice(idx - 1, 2, b, a);
+                    // console.log("at index " + idx + ": " + perm);
+                };
+            });
+            // console.log(perm);
+            for (let i = 0; i < perm.length; i++) {
+                // update output-div to reflect permutation
+                const perm_div = document.querySelector('#out' + (i+1));
+                perm_div.innerText = perm[i];
+                // highlight "wrong" cells
+                if (perm[i] != i + 1) {
+                    // console.log("perm wrong at index " + i);
+                    perm_div.style.backgroundColor = 'rgba(255, 0, 0, 0.2)';
+                } else {
+                    perm_div.style.backgroundColor = '';
+                };
+            };
+        };
+
+        function setupGrid(a, b) {
+            // clear grid
+            const grid = document.querySelector('#grid-container');
+            grid.replaceChildren();
+
+            // setup grid css controls
+            const n_cols = b + 2;
+            const n_rows = a + 2;
+            grid.style.gridTemplateColumns = `repeat(${n_cols}, 60px)`;
+            grid.style.gridTemplateRows = `repeat(${a + 2}, 60px)`;
+            // add top row of grid
+            for (let i = 0; i < b + 2; i++) {
+                const d = document.createElement('div');
+                if (i > 0 & i < b + 1) {
+                    d.innerText = a + i;
+                }
+                grid.appendChild(d);
+            }
+
+            // add central rows, containing grid-wire elements
+            for (let j = 0; j < a; j++) {
+                for (let i = 0; i < b + 2; i++) {
+                    const d = document.createElement('div');
+                    if (i == 0) {
+                        d.innerText = a - j;
+                    } else if (i == b + 1) {
+                        d.innerText = a + b - j;
+                        d.id = "out" + (a + b - j);
+                    } else {
+                        d.classList.add('grid-wire');
+                        d.classList.add('cross');
+                    }
+                    grid.appendChild(d);
+                }
+            }
+            // add bottom row of grid
+            for (let i = 0; i < b + 2; i++) {
+                const d = document.createElement('div');
+                if (i > 0 & i < b + 1) {
+                    d.innerText = i;
+                    d.id = "out" + i;
+                }
+                grid.appendChild(d);
+            }
+
+            console.log("finished grid setup");
+
+            // add event listeners
+            // 1. Select all elements with the class 'grid-wire'
+            const squares = document.querySelectorAll('.grid-wire');
+
+            // 2. Loop through each square
+            squares.forEach(square => {
+                
+                // 3. Add a 'click' event listener to it
+                square.addEventListener('click', () => {
+                    
+                    // 4. When clicked, toggle the 'cross' class.
+                    // If the class is present, it's removed.
+                    // If it's absent, it's added.
+                    square.classList.toggle('cross');
+                });
+
+                // 4. Add 'permutation' event listener to it
+                square.addEventListener('click', computePermutation);
+            });
+
+            // 5. Compute starting permutation
+            computePermutation();
+
+        }
+    </script>
+
+</body>
+</html>
