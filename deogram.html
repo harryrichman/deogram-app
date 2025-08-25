@@ -10,7 +10,6 @@
         /* Basic styling for the page */
         body {
             /* font-family: monospace; */
-            /* display: flex; */
             min-height: 100vh;
             background-color: #f8f8f8;
             /* margin: 0; */
@@ -23,6 +22,58 @@
             align-items: center;
         }
         
+        /* The grid container */
+        #grid-container {
+            display: grid;
+            /* Creates 4+2 columns of equal width */
+            /* grid-template-columns: repeat(6, 60px); */
+            /* Creates 3+2 rows of equal height */
+            /* grid-template-rows: repeat(5, 60px); */
+            gap: 6px; /* Space between the squares */
+            padding: 15px;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            /* font styles */
+            font-size: 24pt;
+            font-family: monospace;
+            text-align: center;
+            vertical-align: middle;
+            align-items: center;
+        }
+
+        /* Styling for each square in the grid */
+        .grid-wire {
+            width: 60px;
+            height: 60px;
+            /* Set the default background image */
+            background-image: url('wire-elbow.png');
+            background-size: cover; /* Ensures the image covers the square */
+            background-position: center;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            /* cursor: pointer; */
+            transition: transform 0.2s ease-in-out;
+        }
+        /* Set color of elbow-wires */
+        div[class=grid-wire] {
+            background-color: rgba(144, 144, 255, 0.2);
+        }
+        
+        /* Add a slight zoom effect on hover for better user experience */
+        .grid-wire:hover {
+            transform: scale(1.05);
+        }
+
+        /* This class will be toggled by JavaScript to change the image */
+        .grid-wire.cross {
+            background-image: url('wire-cross.png');
+        }
+
+        .out-perm-down {
+            margin-top: 10px;
+        }
+
         /* Styling for the input form container */
         #controls {
             margin: 25px;
@@ -48,74 +99,27 @@
             cursor: pointer;
         }
 
-        /* The grid container */
-        #grid-container {
-            display: grid;
-            /* Creates 4+2 columns of equal width */
-            /* grid-template-columns: repeat(6, 60px); */
-            /* Creates 3+2 rows of equal height */
-            /* grid-template-rows: repeat(5, 60px); */
-            gap: 15px; /* Space between the squares */
-            padding: 15px;
-            background-color: #ffffff;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            /* font styles */
-            font-size: 24pt;
-            font-family: monospace;
-            text-align: center;
-            vertical-align: middle;
-            line-height: 60px;
-        }
-
-        /* Styling for each square in the grid */
-        .grid-wire {
-            width: 60px;
-            height: 60px;
-            /* Set the default background image */
-            background-image: url('wire-elbow.png');
-            background-size: cover; /* Ensures the image covers the square */
-            background-position: center;
-            border: 2px solid #ddd;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: transform 0.2s ease-in-out;
-        }
-        /* Set color of elbow-wires */
-        div[class=grid-wire] {
-            background-color: rgba(144, 144, 255, 0.2);
-        }
-        
-        /* Add a slight zoom effect on hover for better user experience */
-        .grid-wire:hover {
-            transform: scale(1.05);
-        }
-
-        /* This class will be toggled by JavaScript to change the image */
-        .grid-wire.cross {
-            background-image: url('wire-cross.png');
-        }
     </style>
 </head>
 <body>
     <h2>Deogram Explorer</h2>
     
-    <p>
-        <ul>
-            <li>
-        Click on squares in the wiring diagram to toggle between "cross" and "elbow" wires.
-            </li>
-            <li>
-                Wires are numbered "in order" along the left- and upper-boundary.
-            </li>
-            <li>
-                Wires should end up in order along the lower- and right-sides.
-            </li>
-            <li>
-                Choose grid dimensions at the bottom, for Deograms of other sizes.
-            </li>
-        </ul>
-    </p>
+    <ul>
+        <li>
+            Click on squares in the wiring diagram to toggle between "cross" and "elbow" wires.
+        </li>
+        <li>
+            Wires are numbered "in order" along the left- and upper-boundary.
+        </li>
+        <li>
+            Wires should end up in order along the lower- and right-sides.
+        </li>
+        <li>
+            Choose grid dimensions at the bottom, for Deograms of other sizes.
+        </li>
+    </ul>
+    
+    <br />
     <div id="content">
 
         <div id="grid-container">
@@ -237,10 +241,15 @@
                 };
             });
             // console.log(perm);
+            // update output-div to reflect permutation
             for (let i = 0; i < perm.length; i++) {
-                // update output-div to reflect permutation
                 const perm_div = document.querySelector('#out' + (i+1));
-                perm_div.innerText = perm[i];
+                const perm_content = '' + perm[i] + '';
+                if (i < b) {
+                    perm_div.innerText = '\u25BE\n ' + perm[i]; // add down-arrow
+                } else {
+                    perm_div.innerHTML = '\u25B8 ' + perm_content; // add right-arrow
+                }
                 // highlight "wrong" cells
                 if (perm[i] != i + 1) {
                     // console.log("perm wrong at index " + i);
@@ -259,13 +268,14 @@
             // setup grid css controls
             const n_cols = b + 2;
             const n_rows = a + 2;
+            /* Creates rows and columns of equal width */
             grid.style.gridTemplateColumns = `repeat(${n_cols}, 60px)`;
             grid.style.gridTemplateRows = `repeat(${a + 2}, 60px)`;
             // add top row of grid
             for (let i = 0; i < b + 2; i++) {
                 const d = document.createElement('div');
                 if (i > 0 & i < b + 1) {
-                    d.innerText = a + i;
+                    d.innerText = '' + (a + i) + '\n\u25BE'; // add down-arrow
                 }
                 grid.appendChild(d);
             }
@@ -275,10 +285,12 @@
                 for (let i = 0; i < b + 2; i++) {
                     const d = document.createElement('div');
                     if (i == 0) {
-                        d.innerText = a - j;
+                        d.innerText = '' + (a - j) + ' \u25B8'; // add right-arrow
                     } else if (i == b + 1) {
-                        d.innerText = a + b - j;
+                        d.innerText = '' + (a + b - j);
+                        d.style.lineHeight = '55px';
                         d.id = "out" + (a + b - j);
+                        d.classList.add('out-perm-right');
                     } else {
                         d.classList.add('grid-wire');
                         d.classList.add('cross');
@@ -292,6 +304,7 @@
                 if (i > 0 & i < b + 1) {
                     d.innerText = i;
                     d.id = "out" + i;
+                    d.classList.add('out-perm-down');
                 }
                 grid.appendChild(d);
             }
